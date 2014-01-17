@@ -4,7 +4,7 @@ Terminal based, top-like monitoring for [Gerrit](https://code.google.com/p/gerri
 
 Usage:
 
-    `gerrit-top.py <gerrit url>`
+    gerrit-top.py <gerrit url>
 
 To do:
 
