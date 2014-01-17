@@ -4,6 +4,20 @@
 
 # Based loosely on http://code.activestate.com/recipes/577936-simple-curses-based-mysql-top/
 
+# Copyright 2014 Gerald Combs
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 import curses
 import json
 import locale
@@ -33,6 +47,8 @@ class GerritServer:
     change_digits = 1
     projects = {}
 
+    __headers = { 'User-Agent': 'gerrit-top.py' }
+
     def __init__(self, url):
         self.url = url
 
@@ -43,7 +59,8 @@ class GerritServer:
         # Version
         try:
             ver_url = '{}/config/server/version'.format(self.url)
-            resp = requests.get(ver_url)
+            resp = requests.get(ver_url, headers = self.__headers)
+            # https://gerrit-review.googlesource.com/Documentation/rest-api.html#output
             rest_version = json.loads(resp.text[resp.text.index('\n'):])
             if len(rest_version) > 0:
                 self.version = rest_version
@@ -61,7 +78,7 @@ class GerritServer:
         try:
             self.projects = {}
             proj_url = '{}/projects/'.format(self.url)
-            resp = requests.get(proj_url)
+            resp = requests.get(proj_url, headers = self.__headers)
             rest_projects = json.loads(resp.text[resp.text.index('\n'):])
             self.projects = rest_projects
         except:
@@ -71,8 +88,7 @@ class GerritServer:
         try:
             self.changes = []
             changes_url = '{}/changes/?q=status:open&n={}'.format(self.url, max_changes)
-            resp = requests.get(changes_url)
-            # https://gerrit-review.googlesource.com/Documentation/rest-api.html#output
+            resp = requests.get(changes_url, headers = self.__headers)
             rest_changes = json.loads(resp.text[resp.text.index('\n'):])
             for chg in rest_changes:
                 self.changes.append({
