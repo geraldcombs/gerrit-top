@@ -37,7 +37,8 @@ col_names = {
     'deletions': '-',
     'insertions': '+',
     'owner': 'Owner',
-    'subject': 'Subject'
+    'status': 'S',
+    'subject': 'Subject',
 }
 
 class GerritServer:
@@ -96,15 +97,16 @@ class GerritServer:
             rest_changes = json.loads(resp.text[resp.text.index('\n'):])
             for chg in rest_changes:
                 if chg.has_key('insertions') and chg.has_key('deletions'):
-                    insertions = chg['insertions']
-                    deletions = chg['deletions']
+                    insertions = str(chg['insertions'])
+                    deletions = str(chg['deletions'])
                 self.changes.append({
-                    'change_num': chg['_number'],
-                    'owner': chg['owner']['name'],
                     'change_id': chg['change_id'],
-                    'subject': chg['subject'],
-                    'insertions': insertions,
+                    'change_num': chg['_number'],
                     'deletions': deletions,
+                    'insertions': insertions,
+                    'owner': chg['owner']['name'],
+                    'status': chg['status'][0],
+                    'subject': chg['subject'],
                     })
         except:
             raise
@@ -145,6 +147,7 @@ def refresh_screen(scr, gerrit_server):
                 'cnum_w': 6,
                 'own_w': 9,
                 'cid_w': 7,
+                'stat_w': 1,
                 'ins_w': 4,
                 'del_w': 4,
                 'subj_w': width
@@ -152,6 +155,7 @@ def refresh_screen(scr, gerrit_server):
             col_format = str(u'{{change_num:>{cnum_w}}}'
             ' {{owner:{own_w}.{own_w}}}'
             ' {{change_id:{cid_w}.{cid_w}}}'
+            ' {{status:{stat_w}.{stat_w}}}'
             ' {{insertions:>{ins_w}.{ins_w}}}'
             ' {{deletions:>{del_w}.{del_w}}}'
             ' {{subject:<{subj_w}.{subj_w}}}').format(**col_w)
