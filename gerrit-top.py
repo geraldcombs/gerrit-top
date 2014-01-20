@@ -32,9 +32,11 @@ except:
     import urlparse
 
 col_names = {
-    'change_num': 'Chg #',
-    'owner': 'Owner',
     'change_id': 'Chg ID',
+    'change_num': 'Chg #',
+    'deletions': '-',
+    'insertions': '+',
+    'owner': 'Owner',
     'subject': 'Subject'
 }
 
@@ -87,17 +89,25 @@ class GerritServer:
         # Changes
         try:
             self.changes = []
+            insertions = '-'
+            deletions = '-'
             changes_url = '{}/changes/?q=status:open&n={}'.format(self.url, max_changes)
             resp = requests.get(changes_url, headers = self.__headers)
             rest_changes = json.loads(resp.text[resp.text.index('\n'):])
             for chg in rest_changes:
+                if chg.has_key('insertions') and chg.has_key('deletions'):
+                    insertions = chg['insertions']
+                    deletions = chg['deletions']
                 self.changes.append({
                     'change_num': chg['_number'],
                     'owner': chg['owner']['name'],
                     'change_id': chg['change_id'],
                     'subject': chg['subject'],
+                    'insertions': insertions,
+                    'deletions': deletions,
                     })
         except:
+            raise
             pass
         
 
@@ -135,9 +145,16 @@ def refresh_screen(scr, gerrit_server):
                 'cnum_w': 6,
                 'own_w': 9,
                 'cid_w': 7,
+                'ins_w': 4,
+                'del_w': 4,
                 'subj_w': width
             }
-            col_format = u'{{change_num:{cnum_w}}} {{owner:{own_w}.{own_w}}} {{change_id:{cid_w}.{cid_w}}} {{subject:<{subj_w}.{subj_w}}}'.format(**col_w)
+            col_format = str(u'{{change_num:>{cnum_w}}}'
+            ' {{owner:{own_w}.{own_w}}}'
+            ' {{change_id:{cid_w}.{cid_w}}}'
+            ' {{insertions:>{ins_w}.{ins_w}}}'
+            ' {{deletions:>{del_w}.{del_w}}}'
+            ' {{subject:<{subj_w}.{subj_w}}}').format(**col_w)
 
             col_str = col_format.format(**col_names)
             add_row(scr, row, col_str, curses.A_BOLD|curses.A_REVERSE)
